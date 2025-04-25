@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-header {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+        }
+
+        .player-info {
+            display: flex;
+            gap: 20px;
+        }
+
+        .player {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .player.white {
+            background-color: #f0d9b5;
+            color: #333;
+        }
+
+        .player.black {
+            background-color: #b58863;
+            color: #fff;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            aspect-ratio: 1/1;
+            border: 2px solid #444;
+        }
+
+        .square {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .square.light {
+            background-color: #f0d9b5;
+        }
+
+        .square.dark {
+            background-color: #b58863;
+        }
+
+        .piece {
+            font-size: 40px;
+            cursor: grab;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .piece.white {
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        .piece.black {
+            color: black;
+            text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.5);
+        }
+
+        .piece span {
+            pointer-events: none;
+        }
+
+        .flipped {
+            transform: rotate(180deg);
+        }
+
+        .login-form, .waiting-lobby {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .login-form input {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            border: none;
+            border-radius: 4px;
+            background-color: #444;
+            color: white;
+        }
+
+        .login-form button, .waiting-lobby button {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .login-form button:hover, .waiting-lobby button:hover {
+            background-color: #45a049;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .promotion-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 100;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .promotion-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .promotion-options button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .promotion-options button:hover {
+            background-color: #45a049;
+        }
+
+        .timer {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        h2, h3 {
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+
+        .game-status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="game-header">
+        <div class="timer">Time: 00:00</div>
+        <div class="player-info">
+            <div class="player white">Waiting...</div>
+            <div class="player black">Waiting...</div>
+        </div>
+    </header>
+
+    <div class="waiting-lobby hidden">
+        <h2>Chess Game Lobby</h2>
+        <p id="player-count">Connecting...</p>
+        <div class="game-status" id="game-status">Waiting for players...</div>
+    </div>
+
+    <div class="game-container">
+        <div class="chessboard"></div>
+    </div>
+
+    <div class="login-form">
+        <h2>Join Chess Game</h2>
+        <input type="text" id="username" placeholder="Enter your name" />
+        <button id="join-btn">Join Game</button>
+    </div>
+
+    <div class="promotion-dialog hidden">
+        <h3>Promote Pawn To:</h3>
+        <div class="promotion-options">
+            <button data-piece="q"><span>♕</span> Queen</button>
+            <button data-piece="r"><span>♖</span> Rook</button>
+            <button data-piece="b"><span>♗</span> Bishop</button>
+            <button data-piece="n"><span>♘</span> Knight</button>
+        </div>
+    </div>
+
+    <!-- Socket.IO & Chess.js -->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+        integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"
+        integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- Your JS -->
+    <script src="/js/chessgame.js"></script>
+</body>
+
+</html>
